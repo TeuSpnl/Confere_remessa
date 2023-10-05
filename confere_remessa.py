@@ -13,17 +13,17 @@ def log(msg):
     try:
         # Abre o arquivo pra editá-lo
         log = open(
-            f"remessa/resultado_remessa.txt-{today.strftime('%d-%m-%Y')}", 'at+', encoding='utf-8')
+            f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt", 'at+', encoding='utf-8')
 
     except (FileNotFoundError):  # Tenta criar o arquivo caso ele não exista
         try:
             log = open(
-                f"remessa/resultado_remessa.txt-{today.strftime('%d-%m-%Y')}", 'at', encoding='utf-8')
+                f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt", 'at', encoding='utf-8')
 
         except (FileNotFoundError):  # Cria a pasta remessa, caso ela não exista
             os.mkdir('./remessa')
             log = open(
-                f"remessa/resultado_remessa.txt-{today.strftime('%d-%m-%Y')}", 'at', encoding='utf-8')
+                f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt", 'at', encoding='utf-8')
 
         except Exception as e:
             print(f"Erro ao criar pasta do log!\nErro: {e.__class__}")
