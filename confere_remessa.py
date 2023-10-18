@@ -142,7 +142,7 @@ def confere():
 
         log("\n#### TXT ####")
 
-        msg['text'] = "Conferência finalizada com sucesso!"
+        msg['text'] = "Conferência finalizada com sucesso e registrada na PASTA REMESSA"
     except Exception as e:
         msg['text'] = f"Erro ao conferir os dados!\nErro: {e.__class__}"
 
