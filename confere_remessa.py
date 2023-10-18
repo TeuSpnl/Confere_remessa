@@ -38,8 +38,13 @@ def extract_data_pdf(text):
     '''Função para extrair dados no formato "xxxxx/xxxx" de uma string'''
     result = re.findall(r'\d+/\w', text)
 
-    for i in range(len(result)):
-        result_novo = [item for item in result if item[-1].isalpha() == 1]
+    # for i in range(len(result)):
+    #     result_novo = [item for item in result if item[-1].isalpha() == 1]
+    result_novo = result.copy()
+
+    for item in result:
+        if item[-1].isalpha() == 0:
+            result_novo.remove(item)
 
     return result_novo
 
@@ -55,6 +60,7 @@ n = len(read_pdf.pages)
 
 # Cria a lista de número dos boletos
 pdf = []
+
 
 # O sistema pega os números dos boletos de cada página do PDF e adiona na lista
 for page_num in range(len(read_pdf.pages)):
@@ -78,11 +84,12 @@ with open(file, 'r') as file_txt:
 # Cria a lista de número dos boletos e seta o padrão de busca
 txt = []
 pattern = '71122'
+# pattern = '1701'
 
 # Encontrar os dados no arquivo TXT que estão após '71122'
-start_index = read_txt.find(pattern) + 5
+start_index = read_txt.find(pattern) + pattern.__len__()
 
-while start_index != 4:
+while start_index != pattern.__len__() - 1:
     # Encontrar o próximo '/' após o padrão
     slash_index = read_txt.find('/', start_index)
 
@@ -91,11 +98,11 @@ while start_index != 4:
         txt.append(read_txt[start_index:slash_index + 2])
 
         # Encontrar os dados no arquivo TXT que estão após '71122'
-        start_index = read_txt.find(pattern, slash_index) + 5
+        start_index = read_txt.find(pattern, slash_index) + pattern.__len__()
     else:
         break
 
-#Adiciona lembrete no log    
+# Adiciona lembrete no log
 log("* LEMBRETE *\nSe faltar no PDF, é URGENTE.\nSe faltar no TXT, provavelmente são os LQ/BX, mas é necessário conferir.")
 
 
