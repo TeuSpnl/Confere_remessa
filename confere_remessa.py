@@ -3,14 +3,15 @@ import re
 import datetime
 import os
 import tkinter as tk
+import subprocess as sbp
 from tkinter.filedialog import askopenfilename
 
+# Define a data de hoje
+today = datetime.datetime.now()
 
 def log(msg):
     """   Gera um arquivo txt mostrando a mensagem que o programa passou na chamada    """
 
-    # Define a data de hoje
-    today = datetime.datetime.now()
     try:
         # Abre o arquivo pra editá-lo
         log = open(
@@ -115,7 +116,7 @@ def select_txt():
 
 
 def confere():
-    """ Função para compara os dados do PDF com os dados do TXT """
+    """ Função para comparar os dados do PDF com os dados do TXT e registrar resultado no log """
 
     # Impede que o sistema compare os dados caso os arquivos não tenham sido carregados
     while txt == [] or pdf == []:
@@ -127,7 +128,7 @@ def confere():
         log("* LEMBRETE *\nSe faltar no PDF, é URGENTE.\nSe faltar no TXT, provavelmente são os LQ/BX, mas é necessário conferir.")
 
         log("‼‼‼‼ PDF ‼‼‼‼\n")
-        # Verifica se os dados do TXT estão no PDF
+        # Verifica se os dados do TXT estão no PDF e registra no log
         for data in txt:
             if data not in pdf:
                 log(f'Falta o "{data}" no PDF.')
@@ -135,14 +136,17 @@ def confere():
         log("\n‼‼‼‼ PDF ‼‼‼‼\n")
 
         log("\n#### TXT ####\n")
-        # Verificar se os dados do PDF estão no TXT
+        # Verificar se os dados do PDF estão no TXT e registra no log
         for data in pdf:
             if data not in txt:
                 log(f'Falta o "{data}" no TXT.')
 
         log("\n#### TXT ####")
-
+        
         msg['text'] = "Conferência finalizada com sucesso e registrada na PASTA REMESSA"
+
+        # Abre o log
+        sbp.Popen(["start", f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt"], shell=True)
     except Exception as e:
         msg['text'] = f"Erro ao conferir os dados!\nErro: {e.__class__}"
 
