@@ -9,6 +9,7 @@ from tkinter.filedialog import askopenfilename
 # Define a data de hoje
 today = datetime.datetime.now()
 
+
 def log(msg):
     """   Gera um arquivo txt mostrando a mensagem que o programa passou na chamada    """
 
@@ -35,20 +36,28 @@ def log(msg):
 
     log.write(f"{msg}\n\n")
 
+    log.close()
+
 
 def extract_data_pdf(text):
     """ Função para extrair dados no formato "xxxxx/xxxx" de uma string """
+    # Reconhece o erro de formatação (dddd d/w) e corrige (ddddd/w)
+    error_pattern = r'(\d+)\s(\d/\w)'
+    fixing = r'\1\2'
 
+    text = re.sub(error_pattern, fixing, text)
+
+    # Encontra os dados no formato "ddddd/w" na string
     result = re.findall(r'\d+/\w', text)
 
-    # for i in range(len(result)):
-    #     result_novo = [item for item in result if item[-1].isalpha() == 1]
     result_novo = result.copy()
 
+    # Remove os dados que não são boletos
     for item in result:
         if item[-1].isalpha() == 0:
             result_novo.remove(item)
 
+    # Retorna o resultado final com os números dos boletos
     return result_novo
 
 
@@ -61,9 +70,7 @@ def select_pdf():
         file_pdf = open(file, 'rb')
         read_pdf = PyPDF2.PdfReader(file_pdf)
 
-        # Conta o número de páginas que o PDF tem
-        n = len(read_pdf.pages)
-    except Exception as e:
+    except Exception:
         msg['text'] = f"Erro ao abrir o PDF!"
         return
 
@@ -118,7 +125,7 @@ def select_txt():
 def confere():
     """ Função para comparar os dados do PDF com os dados do TXT e registrar resultado no log """
 
-    # Impede que o sistema compare os dados caso os arquivos não tenham sido carregados
+    # Impede que o sistema compare os dados caso os arquivos não tenham sido carregados corretamente (pdf e txt vazios)
     while txt == [] or pdf == []:
         msg['text'] = "Carregue os arquivos primeiro!"
         return
@@ -142,11 +149,12 @@ def confere():
                 log(f'Falta o "{data}" no TXT.')
 
         log("\n#### TXT ####")
-        
+
         msg['text'] = "Conferência finalizada com sucesso e registrada na PASTA REMESSA"
 
         # Abre o log
-        sbp.Popen(["start", f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt"], shell=True)
+        sbp.Popen(
+            ["start", f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt"], shell=True)
     except Exception as e:
         msg['text'] = f"Erro ao conferir os dados!\nErro: {e.__class__}"
 
@@ -155,6 +163,7 @@ def sel():
     """ Função para selecionar o layout da remessa """
     global pattern
 
+    # Seleciona o padrão de busca no TXT
     pattern_tk.set("71122" if cnab.get() == 0 else "1701")
     msg["text"] = f"Selecionado o layout {pattern_tk.get()}"
     pattern = pattern_tk.get()
