@@ -4,6 +4,8 @@ import datetime
 import os
 import tkinter as tk
 import subprocess as sbp
+import shutil
+import time
 from tkinter.filedialog import askopenfilename
 
 # Define a data de hoje
@@ -12,27 +14,30 @@ today = datetime.datetime.now()
 
 def log(msg):
     """   Gera um arquivo txt mostrando a mensagem que o programa passou na chamada    """
+    # Define o caminho do arquivo de log
+    log_path = f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt"
+
+    # Cria a pasta remessa caso não exista
+    if not os.path.exists('./remessa'):
+        os.mkdir('./remessa')
+
+    # Cria o arquivo de log caso não exista
+    if not os.path.exists(log_path):
+        with open(log_path, 'w', encoding='utf-8') as log:
+            # Adiciona a data e hora atualizadas no log (o today ali pega a hora de inicio do programa)
+            now = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+            log.write(f"Log gerado em {now}\n\n")
+
+            log.close()
 
     try:
         # Abre o arquivo pra editá-lo
         log = open(
-            f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt", 'at+', encoding='utf-8')
-
-    except (FileNotFoundError):  # Tenta criar o arquivo caso ele não exista
-        try:
-            log = open(
-                f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt", 'at', encoding='utf-8')
-
-        except (FileNotFoundError):  # Cria a pasta remessa, caso ela não exista
-            os.mkdir('./remessa')
-            log = open(
-                f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt", 'at', encoding='utf-8')
-
-        except Exception as e:
-            print(f"Erro ao criar pasta do log!\nErro: {e.__class__}")
+            log_path, 'at+', encoding='utf-8')
 
     except Exception as e:
         print(text=f"Erro ao criar log!\nErro: {e.__class__}")
+        return
 
     log.write(f"{msg}\n\n")
 
@@ -124,13 +129,27 @@ def select_txt():
 
 def confere():
     """ Função para comparar os dados do PDF com os dados do TXT e registrar resultado no log """
+    global pattern
+
+    # Impede que o sistema compare os dados caso o layout da remessa não tenha sido selecionado
+    if not pattern:
+        msg['text'] = "Selecione o layout da remessa!"
+        return
 
     # Impede que o sistema compare os dados caso os arquivos não tenham sido carregados corretamente (pdf e txt vazios)
     while txt == [] or pdf == []:
-        msg['text'] = "Carregue os arquivos primeiro!"
+        msg['text'] = "Os arquivos estão corretos?"
         return
 
+    # Define o caminho do arquivo de log
+    log_path = f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt"
+    old_log_path = f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}-old.txt"
+
     try:
+        # Guarda o log atual para reutilização
+        if os.path.exists(f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt"):
+            os.rename(log_path, old_log_path)
+
         # Adiciona lembrete no log
         log("* LEMBRETE *\nSe faltar no PDF, é URGENTE.\nSe faltar no TXT, provavelmente são os LQ/BX, mas é necessário conferir.")
 
@@ -152,11 +171,24 @@ def confere():
 
         msg['text'] = "Conferência finalizada com sucesso e registrada na PASTA REMESSA"
 
+        # Reutiliza o log antigo
+        if os.path.exists(old_log_path):
+            try:
+                with open(log_path, 'a', encoding='utf-8') as lucario, open(old_log_path, 'r', encoding='utf-8') as old_log:
+                    shutil.copyfileobj(old_log, lucario)  # Copia o conteúdo do arquivo antigo para o novo
+            
+                os.remove(old_log_path)  # Remove o arquivo antigo
+
+            except Exception as e:
+                msg['text'] = f"Erro ao reutilizar o log antigo!\nErro: {e.__class__}"
+                print(e, e.__class__, e.__traceback__, e.__cause__, e.__context__)
+
         # Abre o log
         sbp.Popen(
             ["start", f"remessa/resultado_remessa-{today.strftime('%d-%m-%Y')}.txt"], shell=True)
     except Exception as e:
         msg['text'] = f"Erro ao conferir os dados!\nErro: {e.__class__}"
+        print(e, e.__class__, e.__traceback__, e.__cause__, e.__context__)
 
 
 def sel():
@@ -190,9 +222,10 @@ mainTitle = tk.Label(text="Layout da remessa", font=("Roboto, 14")).grid(
     row=1, column=0, sticky="NSEW", padx=15, pady=5, columnspan=5)
 
 # Var de layout - inclusive o padrão de busca no TXT
-cnab = tk.IntVar()
-pattern_tk = tk.StringVar()
-pattern = ""
+cnab = tk.IntVar(value=0)
+pattern_tk = tk.StringVar(value="71122")
+pattern = "71122"
+
 # pattern = '1701'
 # pattern = '71122'
 
